@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Starting Soon — Hyperspace</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;background:#000;overflow:hidden;font-family:'Segoe UI',Roboto,"Helvetica Neue",Arial,sans-serif}
+
+    canvas#stars{position:fixed;inset:0;z-index:0;display:block}
+
+    .overlay{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;pointer-events:none}
+
+    .crawl-wrap{width:70%;max-width:1000px;min-width:320px;height:60vh;perspective:800px;pointer-events:auto}
+
+    .crawl{
+      font-weight:700;
+      font-size:5vw;
+      line-height:1.1;
+      text-align:center;
+      transform-origin:center;
+      color:#ffe81f;
+      letter-spacing:0.06em;
+      text-transform:uppercase;
+      transform:rotateX(65deg) translateZ(0);
+      animation:crawlDown 14s linear infinite;
+      -webkit-font-smoothing:antialiased;
+      filter:drop-shadow(0 10px 20px rgba(0,0,0,0.6));
+    }
+
+    .crawl-wrap:before{
+      content:"";position:absolute;inset:0;background:linear-gradient(#0000 0%, rgba(0,0,0,0.15) 10%, rgba(0,0,0,0.15) 90%, #000 100%);
+      pointer-events:none;z-index:6
+    }
+
+    @keyframes crawlDown{
+      0%{transform:translateY(-120%) rotateX(65deg) scale(1)}
+      100%{transform:translateY(140%) rotateX(65deg) scale(0.9)}
+    }
+
+    @media (max-width:600px){
+      .crawl{font-size:8vw}
+      .crawl-wrap{height:56vh;width:86%}
+    }
+
+    .vignette{position:fixed;inset:0;z-index:4;pointer-events:none;background:radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.6) 100%)}
+
+  </style>
+</head>
+<body>
+  <canvas id="stars"></canvas>
+
+  <div class="overlay">
+    <div class="crawl-wrap">
+      <div class="crawl" id="crawl">Starting Soon<br><span style="display:block;font-size:.45em;margin-top:.25em;">Please standby for the briefing</span></div>
+    </div>
+  </div>
+
+  <div class="vignette"></div>
+
+  <script>
+    const canvas=document.getElementById('stars');
+    const ctx=canvas.getContext('2d');
+    let w=canvas.width=innerWidth;
+    let h=canvas.height=innerHeight;
+
+    window.addEventListener('resize',()=>{
+      w=canvas.width=innerWidth;
+      h=canvas.height=innerHeight;
+    });
+
+    const num=Math.round((w*h)/20000);
+    const stars=[];
+
+    function rand(min,max){return Math.random()*(max-min)+min}
+
+    for(let i=0;i<num;i++){
+      stars.push({x:rand(-w/2,w/2),y:rand(-h/2,h/2),z:rand(0.1,1)});
+    }
+
+    let speed=0.015;
+    let running=true;
+
+    function draw(){
+      ctx.fillStyle='rgba(0,0,0,0.4)';
+      ctx.fillRect(0,0,w,h);
+      ctx.save();
+      ctx.translate(w/2,h/2);
+
+      for(const s of stars){
+        s.z+=speed*(1+s.z*2);
+        if(s.z>5){
+          s.x=rand(-w/2,w/2);
+          s.y=rand(-h/2,h/2);
+          s.z=rand(0.1,0.3);
+        }
+        const px=s.x/s.z;
+        const py=s.y/s.z;
+        const r=Math.max(0,1.5*(1/s.z));
+        ctx.beginPath();
+        ctx.moveTo(px-(s.x*0.02),py-(s.y*0.02));
+        ctx.lineTo(px,py);
+        ctx.lineWidth=r;
+        ctx.strokeStyle='rgba(255,255,255,'+Math.min(1,(1.2-s.z*0.18))+')';
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(px,py,r*0.7,0,Math.PI*2);
+        ctx.fillStyle='rgba(255,255,255,'+Math.min(1,(1.4-s.z*0.2))+')';
+        ctx.fill();
+      }
+      ctx.restore();
+      if(running) requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+  </script>
+</body>
+</html>
